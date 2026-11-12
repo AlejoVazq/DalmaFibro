@@ -1,0 +1,288 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TALLER
+  DALMATA
+}
+
+enum MaterialKind {
+  HERRAJE
+  PLACA
+}
+
+enum Location {
+  TALLER
+  DALMATA
+}
+
+enum MovementType {
+  INGRESO
+  CONSUMO
+  DESCARTE
+  AJUSTE
+  LLEGADA_PLACA
+  RETIRO_PLACA
+  USO_PLACA
+  REVERSION
+}
+
+enum Priority {
+  ALTA
+  MEDIA
+  BAJA
+}
+
+enum OrderStatus {
+  RECIBIDO
+  EN_PRODUCCION
+  LISTO
+  PARCIAL
+  ENTREGADO
+  CANCELADO
+}
+
+enum PickupType {
+  FLETERO
+  LOGISTICA
+  PERSONAL_DALMATA
+  ENTREGA_PROPIA
+}
+
+enum InvoiceStatus {
+  EMITIDO
+  ENVIADO
+  PAGADO
+  ANULADO
+}
+
+enum SurchargeMode {
+  PER_UNIT
+  TOTAL
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  name         String
+  passwordHash String
+  role         Role
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  sessions      Session[]
+  priceEntries  PriceEntry[]
+  movements     StockMovement[]
+  discards      Discard[]
+  orders        Order[]
+  mockups       Mockup[]
+  deliveries    Delivery[]      @relation("DeliveryCreatedBy")
+  annulledDeliv Delivery[]      @relation("DeliveryAnnulledBy")
+  invoices      Invoice[]
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Material {
+  id        String          @id @default(cuid())
+  code      String          @unique
+  name      String
+  unit      String
+  kind      MaterialKind
+  recipes   RecipeItem[]
+  movements StockMovement[]
+}
+
+model BoxType {
+  id         String       @id @default(cuid())
+  name       String       @unique
+  active     Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  recipe     RecipeItem[]
+  prices     PriceEntry[]
+  orderLines OrderLine[]
+}
+
+model RecipeItem {
+  boxTypeId  String
+  materialId String
+  qtyPerBox  Int
+  boxType    BoxType  @relation(fields: [boxTypeId], references: [id], onDelete: Cascade)
+  material   Material @relation(fields: [materialId], references: [id])
+
+  @@id([boxTypeId, materialId])
+}
+
+model PriceEntry {
+  id          String   @id @default(cuid())
+  boxTypeId   String
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  validFrom   DateTime
+  createdById String
+  createdAt   DateTime @default(now())
+  boxType     BoxType  @relation(fields: [boxTypeId], references: [id], onDelete: Cascade)
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  @@index([boxTypeId, validFrom])
+}
+
+model StockMovement {
+  id              String       @id @default(cuid())
+  materialId      String
+  location        Location
+  type            MovementType
+  quantity        Int
+  note            String?
+  orderId         String?
+  deliveryId      String?
+  discardId       String?
+  transferGroupId String?
+  reversesId      String?
+  createdById     String
+  createdAt       DateTime     @default(now())
+  material        Material     @relation(fields: [materialId], references: [id])
+  order           Order?       @relation(fields: [orderId], references: [id])
+  delivery        Delivery?    @relation(fields: [deliveryId], references: [id])
+  discard         Discard?     @relation(fields: [discardId], references: [id])
+  createdBy       User         @relation(fields: [createdById], references: [id])
+
+  @@index([materialId, location])
+  @@index([createdAt])
+}
+
+model Discard {
+  id          String          @id @default(cuid())
+  note        String?
+  orderId     String?
+  createdById String
+  createdAt   DateTime        @default(now())
+  order       Order?          @relation(fields: [orderId], references: [id])
+  createdBy   User            @relation(fields: [createdById], references: [id])
+  movements   StockMovement[]
+}
+
+model Order {
+  id          String          @id @default(cuid())
+  number      Int             @unique @default(autoincrement())
+  priority    Priority
+  desiredDate DateTime?
+  notes       String?
+  status      OrderStatus     @default(RECIBIDO)
+  createdById String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  createdBy   User            @relation(fields: [createdById], references: [id])
+  lines       OrderLine[]
+  mockups     Mockup[]
+  deliveries  Delivery[]
+  movements   StockMovement[]
+  discards    Discard[]
+}
+
+model OrderLine {
+  id             String         @id @default(cuid())
+  orderId        String
+  boxTypeId      String
+  quantity       Int
+  withLogo       Boolean
+  engravingNotes String?
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  boxType        BoxType        @relation(fields: [boxTypeId], references: [id])
+  mockups        Mockup[]
+  deliveryLines  DeliveryLine[]
+  invoiceLines   InvoiceLine[]
+}
+
+model Mockup {
+  id           String     @id @default(cuid())
+  orderId      String
+  orderLineId  String?
+  filename     String
+  storedName   String
+  mimeType     String
+  size         Int
+  uploadedById String
+  createdAt    DateTime   @default(now())
+  order        Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderLine    OrderLine? @relation(fields: [orderLineId], references: [id], onDelete: SetNull)
+  uploadedBy   User       @relation(fields: [uploadedById], references: [id])
+}
+
+model Delivery {
+  id           String          @id @default(cuid())
+  orderId      String
+  deliveredAt  DateTime
+  pickupType   PickupType
+  pickupName   String
+  requestId    String          @unique
+  createdById  String
+  createdAt    DateTime        @default(now())
+  annulledAt   DateTime?
+  annulReason  String?
+  annulledById String?
+  order        Order           @relation(fields: [orderId], references: [id])
+  createdBy    User            @relation("DeliveryCreatedBy", fields: [createdById], references: [id])
+  annulledBy   User?           @relation("DeliveryAnnulledBy", fields: [annulledById], references: [id])
+  lines        DeliveryLine[]
+  movements    StockMovement[]
+  invoices     Invoice[]
+}
+
+model DeliveryLine {
+  deliveryId  String
+  orderLineId String
+  quantity    Int
+  delivery    Delivery  @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  orderLine   OrderLine @relation(fields: [orderLineId], references: [id])
+
+  @@id([deliveryId, orderLineId])
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  number      Int           @unique @default(autoincrement())
+  deliveryId  String
+  status      InvoiceStatus @default(EMITIDO)
+  issuedAt    DateTime      @default(now())
+  sentAt      DateTime?
+  paidAt      DateTime?
+  paymentNote String?
+  annulledAt  DateTime?
+  annulReason String?
+  total       Decimal       @db.Decimal(12, 2)
+  createdById String
+  delivery    Delivery      @relation(fields: [deliveryId], references: [id])
+  createdBy   User          @relation(fields: [createdById], references: [id])
+  lines       InvoiceLine[]
+
+  @@index([issuedAt])
+}
+
+model InvoiceLine {
+  id              String         @id @default(cuid())
+  invoiceId       String
+  orderLineId     String
+  boxTypeName     String
+  quantity        Int
+  unitPrice       Decimal        @db.Decimal(12, 2)
+  surchargeMode   SurchargeMode?
+  surchargeValue  Decimal        @default(0) @db.Decimal(12, 2)
+  surchargeReason String?
+  subtotal        Decimal        @db.Decimal(12, 2)
+  invoice         Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  orderLine       OrderLine      @relation(fields: [orderLineId], references: [id])
+}
