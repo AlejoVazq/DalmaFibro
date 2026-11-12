@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import type { BoxType, Material, Role } from "@prisma/client";
 import type { SessionUser } from "@/lib/auth/permissions";
 import { prisma } from "@/lib/db";
-import type { MaterialCode } from "../../prisma/materials";
+import type { MaterialCode } from "@/lib/materials";
 
 export type { SessionUser } from "@/lib/auth/permissions";
 

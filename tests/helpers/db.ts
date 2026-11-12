@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { seedMaterials } from "../../prisma/materials";
+import { seedMaterials } from "@/lib/materials";
 
 export async function resetDb() {
   const tables = await prisma.$queryRaw<{ tablename: string }[]>`

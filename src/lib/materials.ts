@@ -1,4 +1,4 @@
-import type { MaterialKind } from "@prisma/client";
+import type { MaterialKind, PrismaClient } from "@prisma/client";
 
 export const MATERIAL_CODES = [
   "TORNILLO",
@@ -21,9 +21,7 @@ export const MATERIALS: { code: MaterialCode; name: string; unit: string; kind: 
   { code: "PLACA_MDF_NEGRO", name: "Placa MDF negro", unit: "placa", kind: "PLACA" },
 ];
 
-export async function seedMaterials(db: {
-  material: { upsert: (args: any) => Promise<unknown> };
-}) {
+export async function seedMaterials(db: Pick<PrismaClient, "material">) {
   for (const m of MATERIALS) {
     await db.material.upsert({ where: { code: m.code }, update: {}, create: m });
   }

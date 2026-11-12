@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { seedMaterials } from "./materials";
+import { seedMaterials } from "../src/lib/materials";
 
 const prisma = new PrismaClient();
 
