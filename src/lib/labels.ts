@@ -35,3 +35,15 @@ export const STATUS_COLOR: Record<string, string> = {
   PAGADO: "bg-green-100 text-green-800",
   ANULADO: "bg-red-100 text-red-700",
 };
+export const MOVEMENT_LABEL: Record<string, string> = {
+  INGRESO: "Ingreso",
+  CONSUMO: "Consumo por entrega",
+  DESCARTE: "Descarte (merma)",
+  AJUSTE: "Ajuste",
+  LLEGADA_PLACA: "Llegada a Dalmata",
+  RETIRO_PLACA: "Retiro de placas",
+  USO_PLACA: "Uso de placas",
+  REVERSION: "Reversión",
+};
+
+export const LOCATION_LABEL = { TALLER: "Taller", DALMATA: "Dalmata (destilería)" } as const;

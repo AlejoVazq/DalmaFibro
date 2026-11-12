@@ -6,7 +6,7 @@ import { listInvoices } from "@/domain/invoices";
 import { StatusBadge } from "@/components/status-badge";
 import { LinkButton } from "@/components/link-button";
 import { NativeSelect } from "@/components/native-select";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { dayEnd, dayStart, fmtDate, fmtMoney } from "@/lib/format";
@@ -30,10 +30,8 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
             Saldo
           </LinkButton>
           {can(actor, "export.excel") && (
-            <a href={`/api/export?${qs}`} className="inline-flex">
-              <Button variant="outline" type="button">
-                Exportar a Excel
-              </Button>
+            <a href={`/api/export?${qs}`} className={buttonVariants({ variant: "outline" })} title="Usa el rango Desde/Hasta; sin fechas, el mes actual">
+              Exportar a Excel
             </a>
           )}
         </div>

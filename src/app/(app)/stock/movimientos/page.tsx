@@ -1,3 +1,4 @@
+import { MOVEMENT_LABEL } from "@/lib/labels";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/current";
 import { listMovements } from "@/domain/stock";
@@ -6,17 +7,6 @@ import { NativeSelect } from "@/components/native-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fmtDateTime } from "@/lib/format";
-
-const MOVEMENT_LABEL: Record<string, string> = {
-  INGRESO: "Ingreso",
-  CONSUMO: "Consumo por entrega",
-  DESCARTE: "Descarte (merma)",
-  AJUSTE: "Ajuste",
-  LLEGADA_PLACA: "Llegada a Dalmata",
-  RETIRO_PLACA: "Retiro de placas",
-  USO_PLACA: "Uso de placas",
-  REVERSION: "Reversión",
-};
 
 const PAGE = 50;
 
