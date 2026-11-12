@@ -22,3 +22,18 @@ test("el token no se guarda en claro y logout invalida", async () => {
   await logout(s!.token);
   expect(await getSessionUser(s!.token)).toBeNull();
 });
+
+test("tras 5 intentos fallidos el usuario queda bloqueado 15 minutos, aun con la clave correcta", async () => {
+  await makeUser("DALMATA", { username: "victima", password: "correcta123" });
+  for (let i = 0; i < 5; i++) expect(await login("victima", `mala${i}`)).toBeNull();
+  await expect(login("victima", "correcta123")).rejects.toMatchObject({ code: "TOO_MANY_ATTEMPTS" });
+  await expect(login("VICTIMA ", "correcta123")).rejects.toMatchObject({ code: "TOO_MANY_ATTEMPTS" });
+});
+
+test("un login correcto reinicia el contador de fallos", async () => {
+  await makeUser("DALMATA", { username: "olvidadizo", password: "correcta123" });
+  for (let i = 0; i < 4; i++) await login("olvidadizo", "mala");
+  expect(await login("olvidadizo", "correcta123")).not.toBeNull();
+  for (let i = 0; i < 4; i++) await login("olvidadizo", "mala");
+  expect(await login("olvidadizo", "correcta123")).not.toBeNull();
+});

@@ -23,6 +23,7 @@ const MESSAGES: Record<string, string> = {
   DELIVERY_ANNULLED: "La entrega está anulada.",
   INVOICE_LOCKED: "El comprobante ya fue enviado y no se puede modificar.",
   SURCHARGE_REASON_REQUIRED: "Indicá el motivo del recargo.",
+  TOO_MANY_ATTEMPTS: "Demasiados intentos fallidos. Esperá 15 minutos y volvé a probar.",
   NOT_FOUND: "No encontrado.",
   INVALID_INPUT: "Revisá los datos cargados.",
 };
