@@ -20,6 +20,7 @@ const MESSAGES: Record<string, string> = {
   HAS_ACTIVE_INVOICE: "Esta entrega tiene un comprobante vigente; anulalo primero.",
   ALREADY_ANNULLED: "Ya estaba anulado.",
   INVOICE_EXISTS: "Esta entrega ya tiene un comprobante.",
+  DELIVERY_ANNULLED: "La entrega está anulada.",
   INVOICE_LOCKED: "El comprobante ya fue enviado y no se puede modificar.",
   SURCHARGE_REASON_REQUIRED: "Indicá el motivo del recargo.",
   NOT_FOUND: "No encontrado.",

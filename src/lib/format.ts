@@ -34,3 +34,15 @@ export function isoLocalDateTime(d: Date): string {
 export function fromLocalDateTime(v: string): Date {
   return new Date(`${v}:00-03:00`);
 }
+
+/** Inicio del día (hora argentina) de un valor YYYY-MM-DD; undefined si viene vacío o inválido. */
+export function dayStart(v?: string): Date | undefined {
+  if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return undefined;
+  return new Date(`${v}T00:00:00-03:00`);
+}
+
+/** Fin del día (hora argentina) de un valor YYYY-MM-DD. */
+export function dayEnd(v?: string): Date | undefined {
+  if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return undefined;
+  return new Date(`${v}T23:59:59.999-03:00`);
+}

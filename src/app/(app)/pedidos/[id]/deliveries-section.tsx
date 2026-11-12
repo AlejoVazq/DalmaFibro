@@ -50,7 +50,7 @@ export function DeliveriesSection({ actor, order, pending }: Props) {
                   Comprobante #{i.number} <StatusBadge status={i.status} />
                 </Link>
               ))}
-              {!d.annulledAt && !activeInvoice && can(actor, "invoices.create") && <InvoiceButton deliveryId={d.id} />}
+              {!d.annulledAt && !activeInvoice && can(actor, "invoices.create") && <InvoiceButton deliveryId={d.id} orderId={order.id} />}
               {!d.annulledAt && can(actor, "records.annul") && !activeInvoice && (
                 <ActionForm action={annulDeliveryAction} className="flex gap-2">
                   <input type="hidden" name="orderId" value={order.id} />

@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await requireUser();
   return (
     <div className="min-h-screen">
-      <header className="border-b">
+      <header className="border-b print:hidden">
         <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <span className="font-semibold mr-2">Gestión Dalmata</span>
           {NAV.filter((n) => n.action === undefined || can(user, n.action)).map((n) => (
@@ -36,7 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </form>
         </nav>
       </header>
-      <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
+      <main className="max-w-6xl mx-auto px-4 py-6 print:p-0">{children}</main>
     </div>
   );
 }
