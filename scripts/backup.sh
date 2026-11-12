@@ -6,6 +6,7 @@
 set -euo pipefail
 
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
+ENV_FILE="${ENV_FILE:-.env}"
 BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/gestiond}"
 KEEP_DAYS="${KEEP_DAYS:-30}"
 DEST="$BACKUP_ROOT/$(date +%F)"
@@ -14,10 +15,10 @@ mkdir -p "$DEST"
 echo "[$(date '+%F %T')] Backup en $DEST"
 
 # 1) Base de datos (formato custom de pg_dump, ya comprimido).
-docker compose -f "$COMPOSE_FILE" exec -T db pg_dump -U gestiond -d gestiond -Fc > "$DEST/gestiond.dump"
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T db pg_dump -U gestiond -d gestiond -Fc > "$DEST/gestiond.dump"
 
 # 2) Archivos subidos (mockups).
-docker compose -f "$COMPOSE_FILE" exec -T app tar -czf - -C /app uploads > "$DEST/uploads.tar.gz"
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T app tar -czf - -C /app uploads > "$DEST/uploads.tar.gz"
 
 # 3) Borra backups de más de KEEP_DAYS días.
 find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +"$KEEP_DAYS" -exec rm -rf {} +
