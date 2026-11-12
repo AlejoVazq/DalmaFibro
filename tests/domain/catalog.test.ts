@@ -67,3 +67,11 @@ test("renombrar cierre", async () => {
   await renameMaterial(papa, "CIERRE_B", "Cierre dorado");
   expect((await prisma.material.findUniqueOrThrow({ where: { code: "CIERRE_B" } })).name).toBe("Cierre dorado");
 });
+
+test("el precio inicial de un tipo nuevo rige también para entregas con fecha anterior a su alta", async () => {
+  const admin = await makeUser("ADMIN");
+  const bt = await createBoxType(admin, { name: "Nueva", unitPrice: 1800, recipe: {} });
+  const unMinutoAntes = new Date(Date.now() - 60_000);
+  expect((await getPriceAt(bt.id, unMinutoAntes)).toNumber()).toBe(1800);
+  expect((await getPriceAt(bt.id, new Date("2020-01-01T00:00:00-03:00"))).toNumber()).toBe(1800);
+});

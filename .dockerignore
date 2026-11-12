@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.superpowers
+uploads
+coverage
+.env*
+!.env.example
+tests
+docs
+*.log

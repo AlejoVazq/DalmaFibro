@@ -57,7 +57,7 @@ export default async function BoxTypePage({ params }: { params: Promise<{ id: st
         <ul className="divide-y border rounded-md text-sm">
           {bt.prices.map((p) => (
             <li key={p.id} className="p-2 flex justify-between">
-              <span>desde {fmtDate(p.validFrom)}</span>
+              <span>{p.validFrom.getFullYear() <= 2000 ? "precio inicial" : `desde ${fmtDate(p.validFrom)}`}</span>
               <span>{fmtMoney(p.unitPrice)}</span>
               <span className="text-muted-foreground">{p.createdBy.name}</span>
             </li>

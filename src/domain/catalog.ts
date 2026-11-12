@@ -8,6 +8,9 @@ export type Recipe = Partial<Record<MaterialCode, number>>;
 
 export const DEFAULT_RECIPE: Recipe = { TORNILLO: 12, BISAGRA: 2, CIERRE_A: 1 };
 
+/** El primer precio de un tipo de caja rige hacia atrás: así una entrega con fecha anterior al alta del tipo igual tiene precio. */
+const INITIAL_PRICE_FROM = new Date("2000-01-01T00:00:00-03:00");
+
 async function writeRecipe(tx: Tx, boxTypeId: string, recipe: Recipe) {
   const entries = Object.entries(recipe).filter(([, q]) => q !== undefined && q > 0) as [MaterialCode, number][];
   const materials = await tx.material.findMany({ where: { code: { in: entries.map(([c]) => c) } } });
@@ -43,7 +46,7 @@ export async function createBoxType(
     const bt = await tx.boxType.create({ data: { name } });
     await writeRecipe(tx, bt.id, recipe);
     await tx.priceEntry.create({
-      data: { boxTypeId: bt.id, unitPrice: input.unitPrice, validFrom: new Date(), createdById: actor.id },
+      data: { boxTypeId: bt.id, unitPrice: input.unitPrice, validFrom: INITIAL_PRICE_FROM, createdById: actor.id },
     });
     return bt;
   });
