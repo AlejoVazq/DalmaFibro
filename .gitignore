@@ -45,3 +45,4 @@ next-env.d.ts
 .env
 uploads/
 !.env.example
+.test-uploads/

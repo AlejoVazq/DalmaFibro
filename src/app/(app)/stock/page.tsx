@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/current";
 import { assertCan, can } from "@/lib/auth/permissions";
-import { getBalances } from "@/domain/stock";
+import { getStockOverview } from "@/domain/commitments";
 import {
   adjustmentAction,
   discardAction,
@@ -15,9 +15,7 @@ import { AdjustmentForm, DiscardForm, FormCard, QuantityForm } from "./forms";
 export default async function StockPage() {
   const actor = await requireUser();
   assertCan(actor, "stock.view");
-  const balances = await getBalances();
-  const hardware = balances.filter((b) => b.kind === "HERRAJE");
-  const plates = balances.filter((b) => b.kind === "PLACA");
+  const { hardware, plates, all: balances } = await getStockOverview();
   const canMove = can(actor, "stock.move");
 
   return (
@@ -31,11 +29,16 @@ export default async function StockPage() {
 
       <section className="space-y-2">
         <h2 className="font-semibold">Herrajes (en el taller)</h2>
+        <p className="text-sm text-muted-foreground">
+          Comprometido = lo que van a usar los pedidos abiertos. Si el disponible está en rojo, falta material.
+        </p>
         <table className="w-full text-sm border rounded-md">
           <thead className="bg-muted/50 text-left">
             <tr>
               <th className="p-2">Material</th>
               <th className="p-2 text-right">Actual</th>
+              <th className="p-2 text-right">Comprometido</th>
+              <th className="p-2 text-right">Disponible</th>
             </tr>
           </thead>
           <tbody>
@@ -45,6 +48,10 @@ export default async function StockPage() {
                   {b.name} <span className="text-muted-foreground">({b.unit})</span>
                 </td>
                 <td className={`p-2 text-right ${b.taller < 0 ? "text-red-600 font-semibold" : ""}`}>{b.taller}</td>
+                <td className="p-2 text-right">{b.committed}</td>
+                <td className={`p-2 text-right ${b.available < 0 ? "text-red-600 font-semibold" : ""}`}>
+                  {b.available}
+                </td>
               </tr>
             ))}
           </tbody>
