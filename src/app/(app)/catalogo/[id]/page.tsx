@@ -1,10 +1,10 @@
-import Link from "next/link";
+import { PageHeader } from "@/components/page-header";
+import { SubmitButton } from "@/components/submit-button";
 import { requireUser } from "@/lib/auth/current";
 import { assertCan } from "@/lib/auth/permissions";
 import { getBoxTypeDetail, type Recipe } from "@/domain/catalog";
 import { prisma } from "@/lib/db";
 import { ActionForm } from "@/components/action-form";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fmtDate, fmtMoney, isoDay } from "@/lib/format";
@@ -21,45 +21,50 @@ export default async function BoxTypePage({ params }: { params: Promise<{ id: st
   ]);
   const recipe: Recipe = Object.fromEntries(bt.recipe.map((r) => [r.material.code, r.qtyPerBox]));
   return (
-    <div className="space-y-8 max-w-xl">
-      <Link href="/catalogo" className="text-sm hover:underline">
-        ← Catálogo
-      </Link>
-      <h1 className="text-xl font-semibold">{bt.name}</h1>
+    <div className="max-w-xl space-y-6">
+      <PageHeader title={bt.name} back={{ href: "/catalogo", label: "Catálogo" }} />
 
-      <ActionForm action={updateBoxTypeAction} className="space-y-3" resetOnSuccess={false}>
+      <section className="space-y-4 rounded-xl border bg-card p-4">
+      <h2 className="text-lg font-semibold">Datos y herrajes</h2>
+      <ActionForm action={updateBoxTypeAction} className="space-y-4" resetOnSuccess={false}>
         <input type="hidden" name="id" value={bt.id} />
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <Label htmlFor="name">Nombre</Label>
           <Input id="name" name="name" defaultValue={bt.name} required />
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="active" defaultChecked={bt.active} /> Activo (se puede pedir)
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border px-3 has-checked:border-primary has-checked:bg-accent">
+          <input type="checkbox" name="active" defaultChecked={bt.active} className="size-5 accent-[var(--primary)]" />
+          <span className="font-medium">Se puede pedir</span>
         </label>
         <RecipeFields closures={closures} values={recipe} />
-        <Button type="submit">Guardar</Button>
+        <SubmitButton className="w-full sm:w-auto">Guardar cambios</SubmitButton>
       </ActionForm>
+      </section>
 
-      <section className="space-y-3">
-        <h2 className="font-semibold">Precio</h2>
-        <ActionForm action={setPriceAction} className="flex flex-wrap gap-2 items-end">
+      <section className="space-y-4 rounded-xl border bg-card p-4">
+        <div>
+          <h2 className="text-lg font-semibold">Precio</h2>
+          <p className="text-sm text-muted-foreground">Los comprobantes usan el precio vigente el día de la entrega.</p>
+        </div>
+        <ActionForm action={setPriceAction} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
           <input type="hidden" name="id" value={bt.id} />
-          <div className="space-y-1">
-            <Label htmlFor="unitPrice">Nuevo precio</Label>
-            <Input id="unitPrice" name="unitPrice" type="number" step="0.01" min="0" required className="w-36" />
+          <div className="space-y-1.5">
+            <Label htmlFor="unitPrice">Nuevo precio por caja</Label>
+            <Input id="unitPrice" name="unitPrice" type="number" step="0.01" min="0" inputMode="decimal" required />
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="validFrom">Vigente desde</Label>
-            <Input id="validFrom" name="validFrom" type="date" defaultValue={isoDay(new Date())} className="w-44" />
+          <div className="space-y-1.5">
+            <Label htmlFor="validFrom">Desde el día</Label>
+            <Input id="validFrom" name="validFrom" type="date" defaultValue={isoDay(new Date())} />
           </div>
-          <Button type="submit">Guardar precio</Button>
+          <SubmitButton>Guardar precio</SubmitButton>
         </ActionForm>
-        <ul className="divide-y border rounded-md text-sm">
+        <h3 className="text-sm font-semibold text-muted-foreground">Historial</h3>
+        <ul className="divide-y rounded-lg border text-sm">
           {bt.prices.map((p) => (
-            <li key={p.id} className="p-2 flex justify-between">
-              <span>{p.validFrom.getFullYear() <= 2000 ? "precio inicial" : `desde ${fmtDate(p.validFrom)}`}</span>
-              <span>{fmtMoney(p.unitPrice)}</span>
-              <span className="text-muted-foreground">{p.createdBy.name}</span>
+            <li key={p.id} className="flex flex-wrap items-center justify-between gap-x-3 p-3">
+              <span>{p.validFrom.getFullYear() <= 2000 ? "Precio inicial" : `Desde el ${fmtDate(p.validFrom)}`}</span>
+              <span className="font-semibold">{fmtMoney(p.unitPrice)}</span>
+              <span className="w-full text-muted-foreground sm:w-auto">cargó {p.createdBy.name}</span>
             </li>
           ))}
         </ul>

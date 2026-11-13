@@ -15,11 +15,12 @@ export function RecipeFields({ closures, values = DEFAULT_RECIPE }: Props) {
     ...closures.map((c) => ({ code: c.code, name: `${c.name} (pares)` })),
   ] as const;
   return (
-    <fieldset className="border rounded-md p-3 space-y-2">
-      <legend className="text-sm px-1">Herrajes por caja</legend>
+    <fieldset className="space-y-2 rounded-lg border p-3">
+      <legend className="px-1 text-sm font-medium">Herrajes que lleva cada caja</legend>
+      <p className="text-sm text-muted-foreground">Se descuentan del stock al entregar. 0 = no lleva.</p>
       {rows.map((r) => (
-        <div key={r.code} className="flex items-center gap-2">
-          <Label htmlFor={`recipe_${r.code}`} className="w-48">
+        <div key={r.code} className="flex items-center gap-3">
+          <Label htmlFor={`recipe_${r.code}`} className="flex-1 font-normal">
             {r.name}
           </Label>
           <Input
@@ -28,7 +29,8 @@ export function RecipeFields({ closures, values = DEFAULT_RECIPE }: Props) {
             type="number"
             min="0"
             step="1"
-            className="w-24"
+            inputMode="numeric"
+            className="w-24 text-center"
             defaultValue={values[r.code as keyof Recipe] ?? 0}
           />
         </div>
