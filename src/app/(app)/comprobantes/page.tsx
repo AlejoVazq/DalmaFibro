@@ -22,7 +22,6 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   const status = sp.status && sp.status in INVOICE_STATUS_LABEL ? (sp.status as InvoiceStatus) : undefined;
   const invoices = await listInvoices(actor, { status, from: dayStart(sp.from), to: dayEnd(sp.to) });
-  const qs = new URLSearchParams(Object.entries(sp).filter(([, v]) => v) as [string, string][]).toString();
   const filtered = Boolean(sp.status || sp.from || sp.to);
 
   return (
@@ -45,7 +44,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
           <ChevronRight className="ml-auto size-4 transition-transform group-open:rotate-90" aria-hidden />
         </summary>
         <div className="space-y-4 border-t p-4">
-          <form className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+          <form id="invoice-filter" className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
             <div className="space-y-1.5">
               <Label htmlFor="status">Estado</Label>
               <NativeSelect id="status" name="status" defaultValue={sp.status ?? ""}>
@@ -76,9 +75,10 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
           )}
           {can(actor, "export.excel") && (
             <div className="space-y-1 border-t pt-4">
-              <a href={`/api/export?${qs}`} className={buttonVariants({ variant: "outline" })}>
+              {/* Envía el mismo formulario a /api/export: usa las fechas que están cargadas, aunque no se haya tocado Filtrar. */}
+              <button type="submit" form="invoice-filter" formAction="/api/export" className={buttonVariants({ variant: "outline" })}>
                 <Download aria-hidden /> Exportar a Excel
-              </a>
+              </button>
               <p className="text-sm text-muted-foreground">Usa las fechas Desde/Hasta. Sin fechas, exporta el mes actual.</p>
             </div>
           )}

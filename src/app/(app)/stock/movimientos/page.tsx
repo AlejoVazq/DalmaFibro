@@ -80,7 +80,7 @@ export default async function MovementsPage({
               </li>
             ))}
           </ul>
-          <div className="hidden overflow-hidden rounded-xl border bg-card md:block">
+          <div className="hidden overflow-x-auto rounded-xl border bg-card md:block">
             <table className="w-full text-sm">
               <thead className="bg-muted/60 text-left">
                 <tr>
