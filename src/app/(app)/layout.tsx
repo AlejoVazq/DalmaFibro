@@ -1,42 +1,17 @@
-import Link from "next/link";
 import { requireUser } from "@/lib/auth/current";
-import { can, type Action } from "@/lib/auth/permissions";
-import { logoutAction } from "@/app/login/actions";
-
-const NAV: { href: string; label: string; action?: Action }[] = [
-  { href: "/", label: "Inicio" },
-  { href: "/pedidos", label: "Pedidos", action: "orders.view" },
-  { href: "/stock", label: "Stock", action: "stock.view" },
-  { href: "/comprobantes", label: "Comprobantes", action: "invoices.view" },
-  { href: "/catalogo", label: "Catálogo", action: "catalog.edit" },
-  { href: "/usuarios", label: "Usuarios", action: "users.manage" },
-];
-
-const ROLE_LABEL = { ADMIN: "Admin", TALLER: "Taller", DALMATA: "Dalmata" } as const;
+import { Sidebar } from "@/components/app-shell/sidebar";
+import { BottomBar } from "@/components/app-shell/bottom-bar";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
+  const shellUser = { id: user.id, name: user.name, role: user.role };
   return (
-    <div className="min-h-screen">
-      <header className="border-b print:hidden">
-        <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-          <span className="font-semibold mr-2">Gestión Dalmata</span>
-          {NAV.filter((n) => n.action === undefined || can(user, n.action)).map((n) => (
-            <Link key={n.href} href={n.href} className="hover:underline">
-              {n.label}
-            </Link>
-          ))}
-          <span className="ml-auto text-muted-foreground">
-            {user.name} · {ROLE_LABEL[user.role]}
-          </span>
-          <form action={logoutAction}>
-            <button className="hover:underline" type="submit">
-              Salir
-            </button>
-          </form>
-        </nav>
-      </header>
-      <main className="max-w-6xl mx-auto px-4 py-6 print:p-0">{children}</main>
+    <div className="flex min-h-screen">
+      <Sidebar user={shellUser} />
+      <div className="min-w-0 flex-1">
+        <main className="mx-auto max-w-5xl px-4 pt-5 pb-28 sm:px-6 md:pt-8 md:pb-10 print:p-0">{children}</main>
+      </div>
+      <BottomBar user={shellUser} />
     </div>
   );
 }
