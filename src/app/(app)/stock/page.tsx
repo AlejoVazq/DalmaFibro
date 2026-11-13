@@ -4,6 +4,8 @@ import { assertCan } from "@/lib/auth/permissions";
 import { getStockOverview } from "@/domain/commitments";
 import { LinkButton } from "@/components/link-button";
 import { PageHeader } from "@/components/page-header";
+import { StockLevelChip } from "@/components/stock-level-chip";
+import { stockLevel } from "@/domain/stock-levels";
 import {
   adjustmentAction,
   discardAction,
@@ -57,18 +59,19 @@ export default async function StockPage() {
         </div>
         <ul className="grid gap-2 sm:grid-cols-2">
           {hardware.map((b) => {
-            const short = b.available < 0;
+            const level = stockLevel(b.code, b.available);
+            const short = level === "falta" || level === "critico";
+            const low = level === "bajo";
             return (
-              <li key={b.code} className={`rounded-xl border bg-card p-4 ${short ? "border-destructive/50 bg-destructive/5" : ""}`}>
+              <li
+                key={b.code}
+                className={`rounded-xl border bg-card p-4 ${short ? "border-destructive/50 bg-destructive/5" : low ? "border-warning/50 bg-warning/5" : ""}`}
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="font-semibold">
                     {b.name} <span className="font-normal text-muted-foreground">({b.unit})</span>
                   </div>
-                  {short && (
-                    <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-white">
-                      Faltan {-b.available}
-                    </span>
-                  )}
+                  <StockLevelChip level={level} available={b.available} />
                 </div>
                 <dl className="mt-2 grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg bg-muted p-2">
@@ -79,9 +82,9 @@ export default async function StockPage() {
                     <dt className="text-xs text-muted-foreground">Reservado</dt>
                     <dd className="text-lg font-semibold">{b.committed}</dd>
                   </div>
-                  <div className={`rounded-lg p-2 ${short ? "bg-destructive/10" : "bg-success/10"}`}>
+                  <div className={`rounded-lg p-2 ${short ? "bg-destructive/10" : low ? "bg-warning/10" : "bg-success/10"}`}>
                     <dt className="text-xs text-muted-foreground">Libre</dt>
-                    <dd className={`text-lg font-semibold ${short ? "text-destructive" : "text-success"}`}>{b.available}</dd>
+                    <dd className={`text-lg font-semibold ${short ? "text-destructive" : low ? "text-warning" : "text-success"}`}>{b.available}</dd>
                   </div>
                 </dl>
               </li>

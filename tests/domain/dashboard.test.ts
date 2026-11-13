@@ -17,7 +17,12 @@ test("listos para retirar, pedidos abiertos y alertas de stock", async () => {
   expect(d.openOrders).toHaveLength(2);
   expect(d.openOrders[0].priority).toBe("ALTA");
   // 15 cajas × 12 tornillos comprometidos sin stock
-  expect(d.stockAlerts).toEqual([{ name: expect.stringMatching(/tornillo/i), available: -180 }]);
+  expect(d.stockAlerts).toContainEqual({ code: "TORNILLO", name: expect.stringMatching(/tornillo/i), available: -180, level: "falta" });
+  // Cierre B sin stock y bisagras con 1000 libres o menos: avisos por umbral
+  expect(d.stockAlerts.find((a) => a.code === "CIERRE_B")?.level).toMatch(/critico|falta/);
+  expect(d.stockAlerts.find((a) => a.code === "BISAGRA")?.level).toMatch(/critico|falta/);
+  // ordenados de más grave a menos grave
+  expect(d.stockAlerts[0].level).toBe("falta");
   expect(d.owed?.toNumber()).toBe(0);
   expect(d.unpaidCount).toBe(0);
 });

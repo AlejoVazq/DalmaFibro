@@ -7,6 +7,7 @@ import { LinkButton } from "@/components/link-button";
 import { OrderCard } from "@/components/order-card";
 import { EmptyState } from "@/components/empty-state";
 import { Notice } from "@/components/notice";
+import { StockLevelChip } from "@/components/stock-level-chip";
 import { fmtMoney } from "@/lib/format";
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
@@ -57,12 +58,24 @@ export default async function HomePage() {
     </Section>
   );
 
+  const urgent = d.stockAlerts.some((a) => a.level !== "bajo");
   const stockAlert = d.stockAlerts.length > 0 && (
-    <Notice tone="warning" title="Falta material para los pedidos abiertos">
-      <ul className="list-inside list-disc">
+    <Notice
+      tone={urgent ? "error" : "warning"}
+      className={isDalmata ? "border-2 p-4 text-base" : undefined}
+      title={isDalmata ? "Hay que comprar herrajes" : "Herrajes por acabarse"}
+    >
+      <p className="text-muted-foreground">
+        {isDalmata
+          ? "Lo que queda libre en el taller, ya descontando los pedidos abiertos."
+          : "Dalmata también ve este aviso. Libre = lo que queda después de los pedidos abiertos."}
+      </p>
+      <ul className="my-2 space-y-1.5">
         {d.stockAlerts.map((a) => (
-          <li key={a.name}>
-            {a.name}: faltan <strong>{-a.available}</strong>
+          <li key={a.code} className="flex flex-wrap items-center gap-2">
+            <span className="font-medium">{a.name}:</span>
+            <span>{a.available < 0 ? "no alcanza para los pedidos" : <>quedan <strong>{a.available}</strong> libres</>}</span>
+            <StockLevelChip level={a.level} available={a.available} />
           </li>
         ))}
       </ul>
@@ -123,9 +136,9 @@ export default async function HomePage() {
 
       {isDalmata ? (
         <>
+          {stockAlert}
           {ready}
           {open}
-          {stockAlert}
           {balance}
         </>
       ) : (

@@ -3,6 +3,11 @@ import { assertCan, type SessionUser } from "@/lib/auth/permissions";
 import { getStockOverview } from "./commitments";
 import { getAccountBalance } from "./invoices";
 import { listOrders, OPEN_STATUSES } from "./orders";
+import { stockLevel, type StockLevel } from "./stock-levels";
+import type { MaterialCode } from "@/lib/materials";
+
+export type StockAlert = { code: MaterialCode; name: string; available: number; level: Exclude<StockLevel, "ok"> };
+const SEVERITY: Record<StockLevel, number> = { falta: 0, critico: 1, bajo: 2, ok: 3 };
 
 export type OrderSummary = {
   id: string;
@@ -17,7 +22,8 @@ export type OrderSummary = {
 export type Dashboard = {
   readyForPickup: OrderSummary[];
   openOrders: OrderSummary[];
-  stockAlerts: { name: string; available: number }[];
+  /** Herrajes con Libre bajo el umbral o negativo, de más grave a menos grave. */
+  stockAlerts: StockAlert[];
   owed?: Prisma.Decimal;
   unpaidCount?: number;
 };
@@ -41,7 +47,10 @@ export async function getDashboard(actor: SessionUser): Promise<Dashboard> {
   return {
     readyForPickup: openOrders.filter((o) => o.status === "LISTO"),
     openOrders,
-    stockAlerts: stock.hardware.filter((h) => h.available < 0).map((h) => ({ name: h.name, available: h.available })),
+    stockAlerts: stock.hardware
+      .map((h) => ({ code: h.code, name: h.name, available: h.available, level: stockLevel(h.code, h.available) }))
+      .filter((a): a is StockAlert => a.level !== "ok")
+      .sort((a, b) => SEVERITY[a.level] - SEVERITY[b.level]),
     owed: balance.owed,
     unpaidCount: balance.unpaid.length,
   };
