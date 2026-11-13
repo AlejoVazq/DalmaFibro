@@ -24,16 +24,22 @@ export const INVOICE_STATUS_LABEL = {
 } as const;
 
 export const STATUS_COLOR: Record<string, string> = {
-  RECIBIDO: "bg-slate-100 text-slate-800",
-  EN_PRODUCCION: "bg-blue-100 text-blue-800",
-  LISTO: "bg-green-100 text-green-800",
-  PARCIAL: "bg-amber-100 text-amber-800",
-  ENTREGADO: "bg-slate-200 text-slate-600",
-  CANCELADO: "bg-red-100 text-red-700",
-  EMITIDO: "bg-slate-100 text-slate-800",
-  ENVIADO: "bg-blue-100 text-blue-800",
-  PAGADO: "bg-green-100 text-green-800",
-  ANULADO: "bg-red-100 text-red-700",
+  RECIBIDO: "bg-muted text-foreground",
+  EN_PRODUCCION: "bg-info/12 text-info",
+  LISTO: "bg-success/12 text-success",
+  PARCIAL: "bg-warning/15 text-warning",
+  ENTREGADO: "bg-muted text-muted-foreground",
+  CANCELADO: "bg-destructive/10 text-destructive",
+  EMITIDO: "bg-muted text-foreground",
+  ENVIADO: "bg-info/12 text-info",
+  PAGADO: "bg-success/12 text-success",
+  ANULADO: "bg-destructive/10 text-destructive",
+};
+
+export const PRIORITY_COLOR: Record<"ALTA" | "MEDIA" | "BAJA", string> = {
+  ALTA: "bg-destructive/10 text-destructive",
+  MEDIA: "bg-warning/15 text-warning",
+  BAJA: "bg-muted text-muted-foreground",
 };
 export const MOVEMENT_LABEL: Record<string, string> = {
   INGRESO: "Ingreso",
