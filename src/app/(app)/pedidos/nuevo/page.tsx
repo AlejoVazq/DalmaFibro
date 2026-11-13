@@ -1,7 +1,10 @@
-import Link from "next/link";
+import { BookOpen } from "lucide-react";
 import { requireUser } from "@/lib/auth/current";
-import { assertCan } from "@/lib/auth/permissions";
+import { assertCan, can } from "@/lib/auth/permissions";
 import { listBoxTypes } from "@/domain/catalog";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
+import { LinkButton } from "@/components/link-button";
 import { createOrderAction } from "../actions";
 import { OrderForm } from "../order-form";
 
@@ -10,13 +13,19 @@ export default async function NewOrderPage() {
   assertCan(actor, "orders.create");
   const boxTypes = await listBoxTypes({});
   return (
-    <div className="space-y-4 max-w-2xl">
-      <Link href="/pedidos" className="text-sm hover:underline">
-        ← Pedidos
-      </Link>
-      <h1 className="text-xl font-semibold">Nuevo pedido</h1>
+    <div className="max-w-2xl space-y-5">
+      <PageHeader
+        title="Nuevo pedido"
+        back={{ href: "/pedidos", label: "Pedidos" }}
+        description="Completá los 3 pasos y tocá «Crear pedido»."
+      />
       {boxTypes.length === 0 ? (
-        <p className="text-muted-foreground">Todavía no hay tipos de caja cargados en el catálogo.</p>
+        <EmptyState
+          icon={BookOpen}
+          title="Todavía no hay tipos de caja"
+          hint={can(actor, "catalog.edit") ? "Primero cargá los tipos de caja en el catálogo." : "Pedile al taller que cargue los tipos de caja."}
+          action={can(actor, "catalog.edit") && <LinkButton href="/catalogo">Ir al catálogo</LinkButton>}
+        />
       ) : (
         <OrderForm action={createOrderAction} boxTypes={boxTypes} submitLabel="Crear pedido" />
       )}

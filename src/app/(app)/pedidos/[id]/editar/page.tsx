@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { PageHeader } from "@/components/page-header";
 import { requireUser } from "@/lib/auth/current";
 import { getOrder } from "@/domain/orders";
 import { listBoxTypes } from "@/domain/catalog";
@@ -11,11 +11,8 @@ export default async function EditOrderPage({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const [order, boxTypes] = await Promise.all([getOrder(actor, id), listBoxTypes({})]);
   return (
-    <div className="space-y-4 max-w-2xl">
-      <Link href={`/pedidos/${id}`} className="text-sm hover:underline">
-        ← Pedido #{order.number}
-      </Link>
-      <h1 className="text-xl font-semibold">Editar pedido #{order.number}</h1>
+    <div className="max-w-2xl space-y-5">
+      <PageHeader title={`Editar pedido #${order.number}`} back={{ href: `/pedidos/${id}`, label: `Pedido #${order.number}` }} />
       <OrderForm
         action={updateOrderAction}
         boxTypes={boxTypes}
