@@ -4,7 +4,10 @@ const LABELS: Record<string, string> = { ...STATUS_LABEL, ...INVOICE_STATUS_LABE
 
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${STATUS_COLOR[status] ?? ""}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-sm font-medium ${STATUS_COLOR[status] ?? ""}`}
+    >
+      <span className="size-1.5 rounded-full bg-current" aria-hidden />
       {LABELS[status] ?? status}
     </span>
   );

@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import type { ActionState } from "@/lib/action";
+import { Notice } from "@/components/notice";
 
 type Props = {
   action: (state: ActionState, fd: FormData) => Promise<ActionState>;
@@ -21,9 +22,9 @@ export function ActionForm({ action, children, className, resetOnSuccess = true 
       <fieldset disabled={pending} className="contents">
         {children}
       </fieldset>
-      {state?.error && <p className="text-sm text-red-600 mt-2">{state.error}</p>}
-      {state?.warning && <p className="text-sm text-amber-600 mt-2">{state.warning}</p>}
-      {state?.ok && <p className="text-sm text-green-700 mt-2">{state.ok}</p>}
+      {state?.error && <Notice tone="error" className="mt-2 w-full basis-full">{state.error}</Notice>}
+      {state?.warning && <Notice tone="warning" className="mt-2 w-full basis-full">{state.warning}</Notice>}
+      {state?.ok && <Notice tone="success" className="mt-2 w-full basis-full">{state.ok}</Notice>}
     </form>
   );
 }
