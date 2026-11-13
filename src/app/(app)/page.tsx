@@ -1,32 +1,34 @@
 import Link from "next/link";
+import { ArrowRight, ClipboardList, PackageCheck, Plus } from "lucide-react";
 import { requireUser } from "@/lib/auth/current";
 import { can } from "@/lib/auth/permissions";
 import { getDashboard, type OrderSummary } from "@/domain/dashboard";
 import { LinkButton } from "@/components/link-button";
-import { StatusBadge } from "@/components/status-badge";
-import { fmtDate, fmtMoney } from "@/lib/format";
-import { PRIORITY_LABEL } from "@/lib/labels";
+import { OrderCard } from "@/components/order-card";
+import { EmptyState } from "@/components/empty-state";
+import { Notice } from "@/components/notice";
+import { fmtMoney } from "@/lib/format";
 
-function OrderList({ orders, empty }: { orders: OrderSummary[]; empty: string }) {
+function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <ul className="divide-y border rounded-md">
+    <section className="space-y-3">
+      <div>
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Orders({ orders, highlight, empty }: { orders: OrderSummary[]; highlight?: boolean; empty: React.ReactNode }) {
+  if (orders.length === 0) return <>{empty}</>;
+  return (
+    <div className="grid gap-3 lg:grid-cols-2">
       {orders.map((o) => (
-        <li key={o.id}>
-          <Link href={`/pedidos/${o.id}`} className="p-3 flex flex-wrap items-center gap-x-4 gap-y-1 hover:bg-muted/40">
-            <span className="font-medium">#{o.number}</span>
-            <span className="text-sm text-muted-foreground">{fmtDate(o.createdAt)}</span>
-            <span className="text-sm">Prioridad {PRIORITY_LABEL[o.priority]}</span>
-            <span className="text-sm">
-              {o.boxes} cajas · {o.boxNames}
-            </span>
-            <span className="ml-auto">
-              <StatusBadge status={o.status} />
-            </span>
-          </Link>
-        </li>
+        <OrderCard key={o.id} order={o} highlight={highlight} />
       ))}
-      {orders.length === 0 && <li className="p-3 text-muted-foreground">{empty}</li>}
-    </ul>
+    </div>
   );
 }
 
@@ -34,58 +36,106 @@ export default async function HomePage() {
   const user = await requireUser();
   const d = await getDashboard(user);
   const isDalmata = user.role === "DALMATA";
+  const canCreate = can(user, "orders.create");
+
+  const newOrder = canCreate && (
+    <LinkButton href="/pedidos/nuevo" size="lg" className="w-full sm:w-auto">
+      <Plus aria-hidden /> Nuevo pedido
+    </LinkButton>
+  );
 
   const ready = (
-    <section className="space-y-2">
-      <h2 className="font-semibold">Listos para retirar</h2>
-      <OrderList orders={d.readyForPickup} empty="No hay pedidos listos para retirar." />
-    </section>
+    <Section
+      title="Listos para retirar"
+      hint={isDalmata ? "Estas cajas ya están terminadas en el taller." : "Dalmata ya los ve en su inicio."}
+    >
+      <Orders
+        orders={d.readyForPickup}
+        highlight
+        empty={<EmptyState icon={PackageCheck} title="Nada listo para retirar por ahora" />}
+      />
+    </Section>
+  );
+
+  const stockAlert = d.stockAlerts.length > 0 && (
+    <Notice tone="warning" title="Falta material para los pedidos abiertos">
+      <ul className="list-inside list-disc">
+        {d.stockAlerts.map((a) => (
+          <li key={a.name}>
+            {a.name}: faltan <strong>{-a.available}</strong>
+          </li>
+        ))}
+      </ul>
+      <Link href="/stock" className="inline-flex items-center gap-1 font-medium text-primary underline-offset-4 hover:underline">
+        Ver stock <ArrowRight className="size-4" aria-hidden />
+      </Link>
+    </Notice>
+  );
+
+  const open = (
+    <Section
+      title={isDalmata ? "Pedidos en curso" : "Pedidos abiertos"}
+      hint={isDalmata ? undefined : "Ordenados por prioridad: arriba lo más urgente."}
+    >
+      <Orders
+        orders={d.openOrders.filter((o) => o.status !== "LISTO")}
+        empty={
+          <EmptyState
+            icon={ClipboardList}
+            title="No hay pedidos abiertos"
+            hint={canCreate ? "Cuando cargues un pedido nuevo, aparece acá." : undefined}
+          />
+        }
+      />
+    </Section>
+  );
+
+  const owed = Number(d.owed ?? 0);
+  const balance = (
+    <Link
+      href="/comprobantes/saldo"
+      className="flex items-center gap-4 rounded-xl border bg-card p-4 transition-colors hover:border-primary/40"
+    >
+      <div className="flex-1">
+        <div className="text-sm text-muted-foreground">Saldo adeudado</div>
+        <div className={`text-2xl font-semibold ${owed > 0 ? "text-warning" : "text-success"}`}>{fmtMoney(d.owed ?? 0)}</div>
+        <div className="text-sm">
+          {d.unpaidCount === 0 ? "No hay comprobantes pendientes de pago." : `${d.unpaidCount} comprobante(s) sin pagar.`}
+        </div>
+      </div>
+      <span className="flex items-center gap-1 text-sm font-medium text-primary">
+        Ver saldo <ArrowRight className="size-4" aria-hidden />
+      </span>
+    </Link>
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold">Hola, {user.name}</h1>
-        {can(user, "orders.create") && <LinkButton href="/pedidos/nuevo">Nuevo pedido</LinkButton>}
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Hola, {user.name}</h1>
+          <p className="text-muted-foreground">
+            {isDalmata ? "Acá ves cómo van tus pedidos." : "Esto es lo que hay que hacer hoy."}
+          </p>
+        </div>
+        {newOrder}
       </div>
 
-      {isDalmata && ready}
-
-      {d.stockAlerts.length > 0 && (
-        <section className="border border-amber-300 bg-amber-50 text-amber-900 rounded-md p-3 text-sm space-y-1">
-          <div className="font-semibold">Falta stock de herrajes para los pedidos abiertos</div>
-          <ul>
-            {d.stockAlerts.map((a) => (
-              <li key={a.name}>
-                {a.name}: faltan {-a.available}
-              </li>
-            ))}
-          </ul>
-          <Link href="/stock" className="underline">
-            Ver stock
-          </Link>
-        </section>
+      {isDalmata ? (
+        <>
+          {ready}
+          {open}
+          {stockAlert}
+          {balance}
+        </>
+      ) : (
+        <>
+          {stockAlert}
+          {open}
+          {ready}
+          {balance}
+        </>
       )}
-
-      <section className="space-y-2">
-        <h2 className="font-semibold">{isDalmata ? "Pedidos en curso" : "Pedidos abiertos (por prioridad)"}</h2>
-        <OrderList orders={d.openOrders} empty="No hay pedidos abiertos." />
-      </section>
-
-      {!isDalmata && ready}
-
-      <section className="border rounded-md p-3 flex flex-wrap items-center gap-4">
-        <div>
-          <div className="text-sm text-muted-foreground">Saldo adeudado</div>
-          <div className="text-lg font-semibold">{fmtMoney(d.owed)}</div>
-        </div>
-        <div className="text-sm">
-          {d.unpaidCount === 0 ? "Sin comprobantes pendientes de pago." : `${d.unpaidCount} comprobante(s) sin pagar.`}
-        </div>
-        <Link href="/comprobantes/saldo" className="ml-auto text-sm underline">
-          Ver saldo
-        </Link>
-      </section>
     </div>
   );
 }
