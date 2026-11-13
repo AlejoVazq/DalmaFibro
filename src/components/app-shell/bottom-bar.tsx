@@ -25,14 +25,14 @@ export function BottomBar({ user }: { user: SessionUser }) {
                 href={i.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-16 flex-col items-center justify-center gap-1 text-[0.7rem] font-medium text-muted-foreground",
+                  "flex h-16 flex-col items-center justify-center gap-1 text-[0.65rem] font-medium tracking-tight text-muted-foreground",
                   active && "text-primary",
                 )}
               >
                 <span className={cn("flex h-7 w-12 items-center justify-center rounded-full", active && "bg-accent")}>
                   <NavIcon name={i.icon} className="size-5" />
                 </span>
-                <span className="max-w-full truncate px-0.5">{i.label}</span>
+                <span className="max-w-full truncate">{i.label}</span>
               </Link>
             </li>
           );

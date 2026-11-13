@@ -27,7 +27,7 @@ export default async function NewOrderPage() {
           action={can(actor, "catalog.edit") && <LinkButton href="/catalogo">Ir al catálogo</LinkButton>}
         />
       ) : (
-        <OrderForm action={createOrderAction} boxTypes={boxTypes} submitLabel="Crear pedido" />
+        <OrderForm action={createOrderAction} boxTypes={boxTypes.map(({ id, name }) => ({ id, name }))} submitLabel="Crear pedido" />
       )}
     </div>
   );

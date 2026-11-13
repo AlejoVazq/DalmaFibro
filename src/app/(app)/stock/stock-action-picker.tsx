@@ -54,7 +54,7 @@ export function StockActionPicker({ actions, forms }: Props) {
         <h2 className="text-lg font-semibold">¿Qué pasó?</h2>
         <p className="text-sm text-muted-foreground">Elegí lo que querés anotar.</p>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
         {actions.map((a) => {
           const Icon = ICONS[a.key];
           return (
@@ -62,14 +62,14 @@ export function StockActionPicker({ actions, forms }: Props) {
               key={a.key}
               type="button"
               onClick={() => setSelected(a.key)}
-              className="flex items-start gap-3 rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              className="flex flex-col items-start gap-2 rounded-xl border bg-card p-3 text-left sm:flex-row sm:gap-3 sm:p-4 transition-colors hover:border-primary/40 hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
               <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
                 <Icon className="size-5" aria-hidden />
               </span>
               <span>
-                <span className="block font-semibold">{a.title}</span>
-                <span className="block text-sm text-muted-foreground">{a.help}</span>
+                <span className="block leading-snug font-semibold">{a.title}</span>
+                <span className="mt-0.5 block text-xs text-muted-foreground sm:text-sm">{a.help}</span>
               </span>
             </button>
           );

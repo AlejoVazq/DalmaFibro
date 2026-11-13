@@ -15,7 +15,7 @@ export default async function EditOrderPage({ params }: { params: Promise<{ id: 
       <PageHeader title={`Editar pedido #${order.number}`} back={{ href: `/pedidos/${id}`, label: `Pedido #${order.number}` }} />
       <OrderForm
         action={updateOrderAction}
-        boxTypes={boxTypes}
+        boxTypes={boxTypes.map(({ id, name }) => ({ id, name }))}
         orderId={order.id}
         submitLabel="Guardar cambios"
         initial={{

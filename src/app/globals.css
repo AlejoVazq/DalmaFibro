@@ -139,6 +139,12 @@
   html {
     @apply font-sans;
   }
+  /* Foco de teclado bien visible en links, resúmenes y botones sin estilo propio. */
+  a:focus-visible,
+  summary:focus-visible,
+  button:focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
 }
 
 /* Movimiento: una sola entrada (aparecer subiendo 4px), 180ms, curva corporativa. Solo con motion-safe. */
