@@ -41,13 +41,33 @@ export function InvoiceBody({ inv }: { inv: Inv }) {
         {inv.annulledAt && (
           <>
             <dt className="text-muted-foreground">Anulado</dt>
-            <dd className="text-red-700">
+            <dd className="text-destructive">
               {fmtDate(inv.annulledAt)} — {inv.annulReason}
             </dd>
           </>
         )}
       </dl>
-      <div className="overflow-x-auto">
+      <ul className="divide-y rounded-xl border sm:hidden print:hidden">
+        {inv.lines.map((l) => (
+          <li key={l.id} className="space-y-1 p-3 text-sm">
+            <div className="flex justify-between gap-2 font-semibold">
+              <span>
+                {l.quantity} × {l.boxTypeName}
+              </span>
+              <span>{fmtMoney(l.subtotal)}</span>
+            </div>
+            <div className="text-muted-foreground">
+              {fmtMoney(l.unitPrice)} c/u · {l.orderLine.withLogo ? "con logo" : "sin logo"}
+              {surchargeText(l) !== "—" && <> · Recargo: {surchargeText(l)}</>}
+            </div>
+          </li>
+        ))}
+        <li className="flex justify-between p-3 text-base font-semibold">
+          <span>Total</span>
+          <span>{fmtMoney(inv.total)}</span>
+        </li>
+      </ul>
+      <div className="hidden overflow-x-auto sm:block print:block">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="border-b text-left">
@@ -76,7 +96,7 @@ export function InvoiceBody({ inv }: { inv: Inv }) {
               <td colSpan={5} className="py-2 pr-2 text-right font-semibold">
                 Total
               </td>
-              <td className="py-2 text-right font-semibold">{fmtMoney(inv.total)}</td>
+              <td className="py-2 text-right text-base font-semibold">{fmtMoney(inv.total)}</td>
             </tr>
           </tfoot>
         </table>

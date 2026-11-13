@@ -11,10 +11,10 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
   const inv = await getInvoice(actor, id);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 bg-white text-black print:max-w-none">
+    <div className="mx-auto max-w-3xl space-y-6 rounded-xl bg-white p-4 text-black sm:p-8 print:max-w-none print:rounded-none print:p-0">
       <div className="flex items-center justify-between print:hidden">
-        <Link href={`/comprobantes/${inv.id}`} className="text-sm hover:underline">
-          ← Volver
+        <Link href={`/comprobantes/${inv.id}`} className="inline-flex h-9 items-center text-sm text-muted-foreground hover:text-foreground">
+          ← Volver al comprobante
         </Link>
         <PrintButton />
       </div>
