@@ -111,6 +111,8 @@ model BoxType {
   id         String       @id @default(cuid())
   name       String       @unique
   active     Boolean      @default(true)
+  /// Cuántas cajas salen de una placa MDF negro (soportes). Vacío = no usa placa negra.
+  boxesPerBlackPlate Int?
   createdAt  DateTime     @default(now())
   recipe     RecipeItem[]
   prices     PriceEntry[]

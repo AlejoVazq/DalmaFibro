@@ -29,21 +29,28 @@ async function writeRecipe(tx: Tx, boxTypeId: string, recipe: Recipe) {
   });
 }
 
+/** Cajas por placa MDF negro: entero positivo, o null si el tipo no usa placa negra. */
+function checkYield(v: number | null | undefined) {
+  if (v === undefined || v === null) return;
+  if (!Number.isInteger(v) || v < 1) throw new DomainError("INVALID_QUANTITY");
+}
+
 function checkPrice(unitPrice: number) {
   if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new DomainError("INVALID_INPUT");
 }
 
 export async function createBoxType(
   actor: SessionUser,
-  input: { name: string; unitPrice: number; recipe: Recipe },
+  input: { name: string; unitPrice: number; recipe: Recipe; boxesPerBlackPlate?: number | null },
 ): Promise<BoxType> {
   assertCan(actor, "catalog.edit");
   const name = input.name.trim();
   if (!name) throw new DomainError("INVALID_INPUT");
   checkPrice(input.unitPrice);
+  checkYield(input.boxesPerBlackPlate);
   const recipe = Object.keys(input.recipe).length ? input.recipe : DEFAULT_RECIPE;
   return prisma.$transaction(async (tx) => {
-    const bt = await tx.boxType.create({ data: { name } });
+    const bt = await tx.boxType.create({ data: { name, boxesPerBlackPlate: input.boxesPerBlackPlate ?? null } });
     await writeRecipe(tx, bt.id, recipe);
     await tx.priceEntry.create({
       data: { boxTypeId: bt.id, unitPrice: input.unitPrice, validFrom: INITIAL_PRICE_FROM, createdById: actor.id },
@@ -55,9 +62,10 @@ export async function createBoxType(
 export async function updateBoxType(
   actor: SessionUser,
   id: string,
-  input: { name?: string; active?: boolean; recipe?: Recipe },
+  input: { name?: string; active?: boolean; recipe?: Recipe; boxesPerBlackPlate?: number | null },
 ): Promise<void> {
   assertCan(actor, "catalog.edit");
+  checkYield(input.boxesPerBlackPlate);
   await prisma.$transaction(async (tx) => {
     const data: Prisma.BoxTypeUpdateInput = {};
     if (input.name !== undefined) {
@@ -65,6 +73,7 @@ export async function updateBoxType(
       data.name = input.name.trim();
     }
     if (input.active !== undefined) data.active = input.active;
+    if (input.boxesPerBlackPlate !== undefined) data.boxesPerBlackPlate = input.boxesPerBlackPlate;
     await tx.boxType.update({ where: { id }, data });
     if (input.recipe) await writeRecipe(tx, id, input.recipe);
   });

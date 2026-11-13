@@ -149,6 +149,33 @@ export async function registerPlateUse(
   });
 }
 
+export const BREAKAGE_REASONS = { DOBLADA: "doblada", HUMEDAD: "humedad", OTRO: "otro" } as const;
+export type BreakageReason = keyof typeof BREAKAGE_REASONS;
+
+/** Placas rotas en el taller (dobladas, con humedad u otro motivo): se descuentan con el motivo en la nota. */
+export async function registerPlateBreakage(
+  actor: SessionUser,
+  input: { materialCode: MaterialCode; quantity: number; reason: BreakageReason; note?: string },
+): Promise<void> {
+  assertCan(actor, "stock.move");
+  checkQty(input.quantity);
+  const detail = input.note?.trim();
+  if (input.reason === "OTRO" && !detail) throw new DomainError("REASON_REQUIRED");
+  if (!(input.reason in BREAKAGE_REASONS)) throw new DomainError("INVALID_INPUT");
+  const m = await materialOfKind(prisma, input.materialCode, "PLACA");
+  const why = input.reason === "OTRO" ? detail : BREAKAGE_REASONS[input.reason] + (detail ? ` (${detail})` : "");
+  await prisma.stockMovement.create({
+    data: {
+      materialId: m.id,
+      location: "TALLER",
+      type: "DESCARTE",
+      quantity: -input.quantity,
+      note: `Rota: ${why}`,
+      createdById: actor.id,
+    },
+  });
+}
+
 export type Balance = {
   materialId: string;
   code: MaterialCode;

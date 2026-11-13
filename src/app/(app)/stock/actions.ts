@@ -10,6 +10,8 @@ import {
   registerPlateArrival,
   registerPlatePickup,
   registerPlateUse,
+  registerPlateBreakage,
+  type BreakageReason,
 } from "@/domain/stock";
 import { handle, num, optStr, str, type ActionState } from "@/lib/action";
 import { MATERIALS, type MaterialCode } from "@/lib/materials";
@@ -67,6 +69,19 @@ export async function platePickupAction(_: ActionState, fd: FormData): Promise<A
   return handle(async () => {
     await registerPlatePickup(actor, { materialCode: code(fd), quantity: num(fd, "quantity"), note: optStr(fd, "note") });
     return done("Retiro de placas registrado.");
+  });
+}
+
+export async function plateBreakageAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const actor = await requireUser();
+  return handle(async () => {
+    await registerPlateBreakage(actor, {
+      materialCode: code(fd),
+      quantity: num(fd, "quantity"),
+      reason: str(fd, "reason") as BreakageReason,
+      note: optStr(fd, "note"),
+    });
+    return done("Placas rotas descontadas.");
   });
 }
 

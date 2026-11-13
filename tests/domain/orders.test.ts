@@ -68,25 +68,21 @@ test("Dalmata edita un pedido recibido; el taller uno en producción", async () 
 
 test("DALMATA no puede cambiar estados", async () => {
   const { order, dal } = await makeOrder();
-  await expect(
-    setOrderStatus(dal, order.id, "EN_PRODUCCION"),
-  ).rejects.toBeInstanceOf(ForbiddenError);
+  await expect(setOrderStatus(dal, order.id, "EN_PRODUCCION")).rejects.toBeInstanceOf(ForbiddenError);
 });
 
 test("transición LISTO -> RECIBIDO es inválida", async () => {
   const { order, papa } = await makeOrder({ status: "LISTO" });
-  await expect(
-    setOrderStatus(papa, order.id, "RECIBIDO"),
-  ).rejects.toMatchObject({ code: "INVALID_TRANSITION" });
+  await expect(setOrderStatus(papa, order.id, "RECIBIDO")).rejects.toMatchObject({ code: "INVALID_TRANSITION" });
   await setOrderStatus(papa, order.id, "EN_PRODUCCION");
 });
 
 test("validaciones de líneas", async () => {
   const dal = await makeUser("DALMATA");
   const bt = await makeBoxType();
-  await expect(
-    createOrder(dal, { materialsOrdered: true, priority: "ALTA", lines: [] }),
-  ).rejects.toMatchObject({ code: "EMPTY_ORDER" });
+  await expect(createOrder(dal, { materialsOrdered: true, priority: "ALTA", lines: [] })).rejects.toMatchObject({
+    code: "EMPTY_ORDER",
+  });
   await expect(
     createOrder(dal, {
       materialsOrdered: true,

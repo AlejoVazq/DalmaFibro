@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ClipboardCheck, Layers, PackagePlus, PackageX, Truck, Warehouse, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ClipboardCheck, Droplets, Layers, PackagePlus, PackageX, Truck, Warehouse, type LucideIcon } from "lucide-react";
 import type { StockActionInfo, StockActionKey } from "./stock-actions";
 
 const ICONS: Record<StockActionKey, LucideIcon> = {
   ingreso: PackagePlus,
   retiro: Truck,
   uso: Layers,
+  rotas: Droplets,
   descarte: PackageX,
   llegada: Warehouse,
   ajuste: ClipboardCheck,

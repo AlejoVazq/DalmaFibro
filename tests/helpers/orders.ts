@@ -10,21 +10,19 @@ export async function makeOrder(
     priority?: Priority;
     status?: "RECIBIDO" | "EN_PRODUCCION" | "LISTO";
     price?: number;
+    boxesPerBlackPlate?: number;
   } = {},
 ) {
   const dal = await makeUser("DALMATA");
   const papa: SessionUser = await makeUser("TALLER");
-  const bt = await makeBoxType({ price: opts.price });
+  const bt = await makeBoxType({ price: opts.price, boxesPerBlackPlate: opts.boxesPerBlackPlate });
   const order = await createOrder(dal, {
     materialsOrdered: true, // estos tests no miran el stock
     priority: opts.priority ?? "MEDIA",
-    lines: [
-      { boxTypeId: bt.id, quantity: opts.quantity ?? 10, withLogo: true },
-    ],
+    lines: [{ boxTypeId: bt.id, quantity: opts.quantity ?? 10, withLogo: true }],
   });
   const status = opts.status ?? "RECIBIDO";
-  if (status !== "RECIBIDO")
-    await setOrderStatus(papa, order.id, "EN_PRODUCCION");
+  if (status !== "RECIBIDO") await setOrderStatus(papa, order.id, "EN_PRODUCCION");
   if (status === "LISTO") await setOrderStatus(papa, order.id, "LISTO");
   return { order, dal, papa, bt };
 }

@@ -10,11 +10,12 @@ import {
   adjustmentAction,
   discardAction,
   ingresoAction,
+  plateBreakageAction,
   plateArrivalAction,
   platePickupAction,
   plateUseAction,
 } from "./actions";
-import { AdjustmentForm, DiscardForm, QuantityForm } from "./forms";
+import { AdjustmentForm, BreakageForm, DiscardForm, QuantityForm } from "./forms";
 import { StockActionPicker } from "./stock-action-picker";
 import { stockActionsFor } from "./stock-actions";
 
@@ -43,6 +44,7 @@ export default async function StockPage() {
             ingreso: <QuantityForm id="ingreso" action={ingresoAction} materials={hardware} submit="Sumar al stock" />,
             retiro: <QuantityForm id="retiro" action={platePickupAction} materials={plates} submit="Registrar retiro" />,
             uso: <QuantityForm id="uso" action={plateUseAction} materials={plates} submit="Descontar placas" />,
+            rotas: <BreakageForm action={plateBreakageAction} materials={plates} />,
             descarte: <DiscardForm action={discardAction} materials={hardware} />,
             llegada: <QuantityForm id="llegada" action={plateArrivalAction} materials={plates} submit="Registrar llegada" />,
             ajuste: <AdjustmentForm action={adjustmentAction} materials={balances} />,

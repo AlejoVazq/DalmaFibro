@@ -29,12 +29,14 @@ export async function material(code: MaterialCode): Promise<Material> {
 }
 
 export async function makeBoxType(
-  opts: { name?: string; price?: number; recipe?: Partial<Record<MaterialCode, number>> } = {},
+  opts: { name?: string; price?: number; recipe?: Partial<Record<MaterialCode, number>>; boxesPerBlackPlate?: number } = {},
 ): Promise<BoxType> {
   seq++;
   const recipe = opts.recipe ?? { TORNILLO: 12, BISAGRA: 2, CIERRE_A: 1 };
   const creator = await makeUser("ADMIN");
-  const bt = await prisma.boxType.create({ data: { name: opts.name ?? `Caja ${seq}` } });
+  const bt = await prisma.boxType.create({
+    data: { name: opts.name ?? `Caja ${seq}`, boxesPerBlackPlate: opts.boxesPerBlackPlate },
+  });
   for (const [code, qty] of Object.entries(recipe)) {
     const m = await material(code as MaterialCode);
     await prisma.recipeItem.create({ data: { boxTypeId: bt.id, materialId: m.id, qtyPerBox: qty! } });

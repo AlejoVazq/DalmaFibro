@@ -15,10 +15,20 @@ function recipeFrom(fd: FormData): Recipe {
   return recipe;
 }
 
+/** Vacío = no usa placa negra. */
+function blackPlateFrom(fd: FormData): number | null {
+  return str(fd, "boxesPerBlackPlate") === "" ? null : num(fd, "boxesPerBlackPlate");
+}
+
 export async function createBoxTypeAction(_: ActionState, fd: FormData): Promise<ActionState> {
   const actor = await requireUser();
   return handle(async () => {
-    await createBoxType(actor, { name: str(fd, "name"), unitPrice: num(fd, "unitPrice"), recipe: recipeFrom(fd) });
+    await createBoxType(actor, {
+      name: str(fd, "name"),
+      unitPrice: num(fd, "unitPrice"),
+      recipe: recipeFrom(fd),
+      boxesPerBlackPlate: blackPlateFrom(fd),
+    });
     revalidatePath("/catalogo");
     return { ok: "Tipo de caja creado." };
   });
@@ -32,6 +42,7 @@ export async function updateBoxTypeAction(_: ActionState, fd: FormData): Promise
       name: str(fd, "name"),
       active: fd.get("active") === "on",
       recipe: recipeFrom(fd),
+      boxesPerBlackPlate: blackPlateFrom(fd),
     });
     revalidatePath(`/catalogo/${id}`);
     revalidatePath("/catalogo");

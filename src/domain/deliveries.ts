@@ -69,6 +69,19 @@ export async function registerDelivery(
         consumption.set(r.materialId, (consumption.get(r.materialId) ?? 0) + l.quantity * r.qtyPerBox);
       }
     }
+    // Placas MDF negro: por tipo de caja, cajas ÷ cajas por placa, redondeando para arriba.
+    const byType = new Map<string, { qty: number; perPlate: number }>();
+    for (const l of lines) {
+      const bt = orderLines.find((x) => x.id === l.orderLineId)!.boxType;
+      if (!bt.boxesPerBlackPlate) continue;
+      const cur = byType.get(bt.id) ?? { qty: 0, perPlate: bt.boxesPerBlackPlate };
+      byType.set(bt.id, { ...cur, qty: cur.qty + l.quantity });
+    }
+    if (byType.size > 0) {
+      const plate = await tx.material.findUniqueOrThrow({ where: { code: "PLACA_MDF_NEGRO" } });
+      const plates = [...byType.values()].reduce((s, t) => s + Math.ceil(t.qty / t.perPlate), 0);
+      if (plates > 0) consumption.set(plate.id, plates);
+    }
     const rows: MovementRow[] = [...consumption.entries()].map(([materialId, qty]) => ({
       materialId,
       location: "TALLER" as Location,

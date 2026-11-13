@@ -36,7 +36,7 @@ export default async function BoxTypePage({ params }: { params: Promise<{ id: st
           <input type="checkbox" name="active" defaultChecked={bt.active} className="size-5 accent-[var(--primary)]" />
           <span className="font-medium">Se puede pedir</span>
         </label>
-        <RecipeFields closures={closures} values={recipe} />
+        <RecipeFields closures={closures} values={recipe} blackPlate={bt.boxesPerBlackPlate} />
         <SubmitButton className="w-full sm:w-auto">Guardar cambios</SubmitButton>
       </ActionForm>
       </section>
