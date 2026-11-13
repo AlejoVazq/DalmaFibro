@@ -15,6 +15,7 @@ import { ConfirmSubmit } from "@/components/confirm-submit";
 import { Input } from "@/components/ui/input";
 import { fmtDate, fmtDateTime } from "@/lib/format";
 import { orderSteps } from "@/lib/steps";
+import type { Shortage } from "@/domain/shortage";
 import { cancelOrderAction, setStatusAction, uploadMockupAction } from "../actions";
 import { DeliveriesSection } from "./deliveries-section";
 
@@ -125,6 +126,22 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
         </section>
+      )}
+
+      {order.materialsOrderedAt && (
+        <Notice tone="warning" title="Materiales encargados">
+          <p>Cuando se cargó el pedido no alcanzaban los herrajes. Faltaban:</p>
+          <ul className="list-inside list-disc">
+            {((order.materialsShortage ?? []) as Shortage[]).map((s) => (
+              <li key={s.code}>
+                <strong>{s.missing}</strong> {s.name.toLowerCase()}
+              </li>
+            ))}
+          </ul>
+          <p className="text-muted-foreground">
+            {order.materialsOrderedByName} marcó que ya los encargó, el {fmtDateTime(order.materialsOrderedAt)}.
+          </p>
+        </Notice>
       )}
 
       {order.notes && (

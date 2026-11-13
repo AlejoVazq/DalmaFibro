@@ -2,9 +2,17 @@ import type { Order, OrderStatus, Priority } from "@prisma/client";
 import { prisma, type Tx } from "@/lib/db";
 import { DomainError } from "@/lib/errors";
 import { assertCan, type SessionUser } from "@/lib/auth/permissions";
+import { MaterialsShortError, shortageFor } from "./shortage";
 
 export type OrderLineInput = { boxTypeId: string; quantity: number; withLogo: boolean; engravingNotes?: string };
-export type OrderInput = { priority: Priority; desiredDate?: Date; notes?: string; lines: OrderLineInput[] };
+export type OrderInput = {
+  priority: Priority;
+  desiredDate?: Date;
+  notes?: string;
+  lines: OrderLineInput[];
+  /** Confirmación de que ya se encargaron los herrajes que faltan. Sin esto, un faltante frena el pedido. */
+  materialsOrdered?: boolean;
+};
 
 export const OPEN_STATUSES: OrderStatus[] = ["RECIBIDO", "EN_PRODUCCION", "LISTO", "PARCIAL"];
 const PRIORITY_RANK: Record<Priority, number> = { ALTA: 0, MEDIA: 1, BAJA: 2 };
@@ -33,6 +41,14 @@ const lineData = (lines: OrderLineInput[]) =>
     engravingNotes: l.engravingNotes?.trim() || null,
   }));
 
+/** Frena si faltan herrajes y no se marcó que están encargados; si se marcó, devuelve los datos a guardar. */
+async function checkMaterials(tx: Tx, actor: SessionUser, input: OrderInput) {
+  const shortage = await shortageFor(tx, input.lines);
+  if (shortage.length === 0) return {};
+  if (!input.materialsOrdered) throw new MaterialsShortError(shortage);
+  return { materialsOrderedAt: new Date(), materialsOrderedByName: actor.name, materialsShortage: shortage };
+}
+
 /** Bloquea la fila del pedido y devuelve su estado actual. */
 export async function lockOrder(tx: Tx, orderId: string): Promise<OrderStatus> {
   const rows = await tx.$queryRaw<{ status: OrderStatus }[]>`SELECT status FROM "Order" WHERE id = ${orderId} FOR UPDATE`;
@@ -53,8 +69,10 @@ export async function createOrder(actor: SessionUser, input: OrderInput): Promis
   assertCan(actor, "orders.create");
   return prisma.$transaction(async (tx) => {
     await validateLines(tx, input.lines);
+    const materials = await checkMaterials(tx, actor, input);
     return tx.order.create({
       data: {
+        ...materials,
         priority: input.priority,
         desiredDate: input.desiredDate,
         notes: input.notes?.trim() || null,
@@ -74,9 +92,11 @@ export async function updateOrder(actor: SessionUser, orderId: string, input: Or
     if (delivered > 0) throw new DomainError("ORDER_LOCKED");
     await validateLines(tx, input.lines);
     await tx.orderLine.deleteMany({ where: { orderId } });
+    const materials = await checkMaterials(tx, actor, input);
     await tx.order.update({
       where: { id: orderId },
       data: {
+        ...materials,
         priority: input.priority,
         desiredDate: input.desiredDate ?? null,
         notes: input.notes?.trim() || null,

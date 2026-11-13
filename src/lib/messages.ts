@@ -13,6 +13,7 @@ const MESSAGES: Record<string, string> = {
   INVALID_FILE: "Archivo inválido: solo PNG, JPG, WEBP o PDF de hasta 20 MB.",
   EMPTY_ORDER: "El pedido tiene que tener al menos una línea.",
   INACTIVE_BOX_TYPE: "Ese tipo de caja está desactivado.",
+  MATERIALS_SHORT: "No alcanzan los herrajes para este pedido. Marcá que ya los encargaste para poder guardarlo.",
   ORDER_NOT_DELIVERABLE: "El pedido no está en un estado que permita entregarlo.",
   OVER_DELIVERY: "Estás entregando más cajas de las que quedan pendientes.",
   EMPTY_DELIVERY: "La entrega tiene que tener al menos una caja.",

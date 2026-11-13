@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { Priority } from "@prisma/client";
 import { requireUser } from "@/lib/auth/current";
 import { cancelOrder, createOrder, setOrderStatus, updateOrder, type OrderInput } from "@/domain/orders";
+import { previewShortage, type Shortage } from "@/domain/shortage";
 import { MOCKUP_MAX_BYTES, MOCKUP_TYPES, saveMockup } from "@/domain/mockups";
 import { handle, num, optStr, str, type ActionState } from "@/lib/action";
 import { DomainError } from "@/lib/errors";
@@ -28,6 +29,7 @@ function orderInputFrom(fd: FormData): OrderInput {
     desiredDate: desired ? new Date(`${desired}T12:00:00-03:00`) : undefined,
     notes: optStr(fd, "notes"),
     lines,
+    materialsOrdered: str(fd, "materialsOrdered") === "on",
   };
 }
 
@@ -37,6 +39,15 @@ function filesFrom(fd: FormData): File[] {
     throw new DomainError("INVALID_FILE");
   }
   return files;
+}
+
+/** Lo que faltaría de herrajes con estas cajas; el formulario lo muestra mientras se completa. */
+export async function previewShortageAction(
+  lines: { boxTypeId: string; quantity: number }[],
+  orderId?: string,
+): Promise<Shortage[]> {
+  const actor = await requireUser();
+  return previewShortage(actor, lines, orderId);
 }
 
 export async function createOrderAction(_: ActionState, fd: FormData): Promise<ActionState> {

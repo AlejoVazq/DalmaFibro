@@ -3,9 +3,9 @@ import { getBalances } from "./stock";
 import { OPEN_STATUSES } from "./orders";
 
 /** Herrajes comprometidos por pedidos abiertos: Σ cajas pendientes × receta. */
-export async function getCommitments(tx: Tx = prisma): Promise<Map<string, number>> {
+export async function getCommitments(tx: Tx = prisma, excludeOrderId?: string): Promise<Map<string, number>> {
   const lines = await tx.orderLine.findMany({
-    where: { order: { status: { in: OPEN_STATUSES } } },
+    where: { order: { status: { in: OPEN_STATUSES }, id: excludeOrderId ? { not: excludeOrderId } : undefined } },
     include: {
       boxType: { include: { recipe: true } },
       deliveryLines: { where: { delivery: { annulledAt: null } } },

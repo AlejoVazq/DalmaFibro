@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { PackageSearch, Plus, Trash2 } from "lucide-react";
 import { ActionForm } from "@/components/action-form";
 import { NativeSelect } from "@/components/native-select";
 import { SubmitButton } from "@/components/submit-button";
@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { ActionState } from "@/lib/action";
 import { cn } from "@/lib/utils";
+import type { Shortage } from "@/domain/shortage";
+import { previewShortageAction } from "./actions";
 
 type Line = { boxTypeId: string; quantity: number | ""; withLogo: boolean; engravingNotes: string };
 
@@ -47,6 +49,23 @@ export function OrderForm({ action, boxTypes, orderId, initial, submitLabel }: P
   const update = (i: number, patch: Partial<Line>) =>
     setLines((ls) => ls.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
   const total = lines.reduce((s, l) => s + (Number(l.quantity) || 0), 0);
+  const [shortage, setShortage] = useState<Shortage[]>([]);
+  const [ordered, setOrdered] = useState(false);
+  const request = useRef(0);
+  const linesKey = JSON.stringify(lines.map((l) => [l.boxTypeId, l.quantity]));
+  useEffect(() => {
+    const id = ++request.current;
+    const t = setTimeout(async () => {
+      const res = await previewShortageAction(
+        lines.map((l) => ({ boxTypeId: l.boxTypeId, quantity: Number(l.quantity) })),
+        orderId,
+      ).catch(() => null);
+      if (res && id === request.current) setShortage(res);
+    }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- linesKey resume las cantidades
+  }, [linesKey, orderId]);
+  const blocked = shortage.length > 0 && !ordered;
 
   return (
     <ActionForm action={action} className="space-y-5" resetOnSuccess={false}>
@@ -176,9 +195,47 @@ export function OrderForm({ action, boxTypes, orderId, initial, submitLabel }: P
         </div>
       </Step>
 
-      <SubmitButton size="lg" className="w-full sm:w-auto">
+      {shortage.length > 0 && (
+        <section
+          aria-live="polite"
+          className="anim-in space-y-3 rounded-xl border-2 border-destructive/40 bg-destructive/5 p-4 sm:p-5"
+        >
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+              <PackageSearch className="size-5" aria-hidden />
+            </span>
+            <div>
+              <h2 className="text-lg font-semibold">No alcanzan los herrajes</h2>
+              <p className="text-sm text-muted-foreground">
+                Con lo que ya está reservado para otros pedidos, para este faltan:
+              </p>
+            </div>
+          </div>
+          <ul className="space-y-1 pl-1 text-base">
+            {shortage.map((s) => (
+              <li key={s.code}>
+                <strong>{s.missing}</strong> {s.name.toLowerCase()}
+              </li>
+            ))}
+          </ul>
+          <p className="text-sm">Primero encargá estos materiales. Cuando estén encargados, marcalo acá para poder guardar el pedido.</p>
+          <label className="flex cursor-pointer items-center gap-3 rounded-lg border bg-card p-3 font-medium has-checked:border-success has-checked:bg-success/10">
+            <input
+              type="checkbox"
+              name="materialsOrdered"
+              checked={ordered}
+              onChange={(e) => setOrdered(e.target.checked)}
+              className="size-5 accent-[var(--color-success)]"
+            />
+            Ya encargué los materiales que faltan
+          </label>
+        </section>
+      )}
+
+      <SubmitButton size="lg" className="w-full sm:w-auto" disabled={blocked}>
         {submitLabel}
       </SubmitButton>
+      {blocked && <p className="text-sm text-muted-foreground">Para guardar, marcá que ya encargaste los materiales.</p>}
     </ActionForm>
   );
 }
